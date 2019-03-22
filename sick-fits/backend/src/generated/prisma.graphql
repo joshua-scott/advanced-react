@@ -1,5 +1,5 @@
 # source: https://eu1.prisma.sh/joshua-scott-37c39a/sick-fits/dev
-# timestamp: Sun Oct 14 2018 18:52:25 GMT+0300 (EEST)
+# timestamp: Fri Mar 22 2019 11:59:58 GMT+0200 (Eastern European Standard Time)
 
 type AggregateUser {
   count: Int!
@@ -21,7 +21,7 @@ type Mutation {
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
   deleteUser(where: UserWhereUniqueInput!): User
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
-  updateManyUsers(data: UserUpdateInput!, where: UserWhereInput): BatchPayload!
+  updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
   deleteManyUsers(where: UserWhereInput): BatchPayload!
 }
 
@@ -85,6 +85,7 @@ type UserConnection {
 }
 
 input UserCreateInput {
+  id: ID
   name: String!
   email: String!
 }
@@ -157,6 +158,11 @@ input UserSubscriptionWhereInput {
 }
 
 input UserUpdateInput {
+  name: String
+  email: String
+}
+
+input UserUpdateManyMutationInput {
   name: String
   email: String
 }
