@@ -11,6 +11,7 @@ const Query = {
   // and we don't need anything else to happen such as authentication etc,
   // we can simply forward the query directly to our Prisma db, like this:
   items: forwardTo('db'),
+  item: forwardTo('db'),
 };
 
 module.exports = Query;
