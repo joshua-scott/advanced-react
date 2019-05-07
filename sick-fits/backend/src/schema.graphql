@@ -11,6 +11,8 @@ type Mutation {
 
   # Todo: add ability to edit the image too
   updateItem(id: ID!, title: String, description: String, price: Int): Item!
+
+  deleteItem(id: ID!): Item
 }
 
 type Query {
