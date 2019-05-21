@@ -4,10 +4,18 @@ import gql from 'graphql-tag';
 import styled from 'styled-components';
 import Item from './Item';
 import Pagination from './Pagination';
+import { perPage } from '../config';
 
+/**
+ * todo: add cache invalidation when it's available in Apollo (currently it's not).
+ * See end of video 23 "Pagination and Cache Invalidation" for details.
+ * Basically the issue is if an item is added, it won't be shown until cache is cleared.
+ * One solution is `refetchQueries` on CREATE_ITEM_MUTATION, but then we refetch *everything*
+ * Another solution is `networkPolicy` on ALL_ITEMS_QUERY, but then we hammer the server
+ */
 const ALL_ITEMS_QUERY = gql`
-  query ALL_ITEMS_QUERY {
-    items {
+  query ALL_ITEMS_QUERY($skip: Int = 0, $first: Int = ${perPage}) {
+    items(skip: $skip, first: $first, orderBy: createdAt_DESC) {
       id
       title
       description
@@ -37,7 +45,12 @@ class Items extends Component {
     return (
       <Center>
         <Pagination page={this.props.page} />
-        <Query query={ALL_ITEMS_QUERY}>
+        <Query
+          query={ALL_ITEMS_QUERY}
+          variables={{
+            skip: this.props.page * perPage - perPage,
+          }}
+        >
           {({ data, error, loading }) => {
             if (loading) return <p>Loading...</p>;
             if (error) return <p>Error: {error.message}</p>;
