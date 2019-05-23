@@ -1,4 +1,11 @@
-endpoint: ${env:PRISMA_ENDPOINT}
+# Notes:
+# The post-deploy hook isn't working right now for some reason.
+# So I need to use graphql-cli directly.
+# Updating prisma might fix it but I want to be on the same version as Wes so the course goes smoothly.
+# That's why the endpoint is hardcoded here and not (only) in the .env file
+
+# endpoint: ${env:PRISMA_ENDPOINT}
+endpoint: https://eu1.prisma.sh/joshua-scott-37c39a/sick-fits/dev
 datamodel: datamodel.prisma
 # secret: ${env:PRISMA_SECRET}
 hooks:
