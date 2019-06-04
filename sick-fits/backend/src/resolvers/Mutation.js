@@ -121,6 +121,51 @@ const Mutation = {
     return { message: 'Password reset requested!' };
     // todo: 3. Email them the reset token
   },
+
+  async resetPassword(parent, args, ctx, info) {
+    // 1. Check the passwords match
+    if (args.password !== args.confirmPassword) {
+      throw new Error(`Your passwords don't match!`);
+    }
+    // 2. Check it's a legit reset token that hasn't expired
+    const [user] = await ctx.db.query.users({
+      where: {
+        resetToken: args.resetToken,
+        resetTokenExpiry_gte: Date.now() - 3600000,
+      },
+    });
+
+    if (!user) {
+      throw new Error(
+        `This token is either invalid or expired - try requesting another password reset.`
+      );
+    }
+
+    // 3. Hash their new password
+    const password = await bcrypt.hash(args.password, 10);
+
+    // 4. Save the new password to the user and remove old password reset fields
+    const updatedUser = await ctx.db.mutation.updateUser({
+      where: { email: user.email },
+      data: {
+        password,
+        resetToken: null,
+        resetTokenExpiry: null,
+      },
+    });
+
+    // 5. Generate JWT
+    const token = jwt.sign({ userId: updatedUser.id }, process.env.APP_SECRET);
+
+    // 6. Set the JWT cookie
+    ctx.response.cookie('token', token, {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 365,
+    });
+
+    // 7. Return the new user
+    return updatedUser;
+  },
 };
 
 module.exports = Mutation;
