@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { randomBytes } = require('crypto');
 const { promisify } = require('util');
+const { transport, makeANiceEmail } = require('../mail');
 
 const Mutation = {
   async createItem(parent, args, ctx, info) {
@@ -106,7 +107,7 @@ const Mutation = {
     // 1. Check if this is a real user
     const user = await ctx.db.query.user({ where: { email: args.email } });
     if (!user) {
-      // ! Note: another security risk at it can reveal who has an account
+      // ! Note: another security risk as it can reveal who has an account
       throw new Error(`No such user found for email ${args.email}`);
     }
 
@@ -118,8 +119,21 @@ const Mutation = {
       data: { resetToken, resetTokenExpiry },
     });
 
+    // 3. Email them the reset token
+    const mailRes = await transport.sendMail({
+      from: 'scotty313@gmail.com',
+      to: user.email,
+      subject: 'Your password reset token',
+      html: makeANiceEmail(
+        `<p>Your password reset token is here!</p>
+          <a href="${process.env.FRONTEND_URL}/reset?resetToken=${resetToken}">
+            Click here to reset your password.
+          </a>`
+      ),
+    });
+
+    // 4. Return the message
     return { message: 'Password reset requested!' };
-    // todo: 3. Email them the reset token
   },
 
   async resetPassword(parent, args, ctx, info) {
