@@ -23,19 +23,51 @@ const BigButton = styled.button`
   }
 `;
 
-const RemoveFromCart = props => (
-  <Mutation mutation={REMOVE_FROM_CART_MUTATION} variables={{ id: props.id }}>
-    {(removeFromCart, { loading, error }) => (
-      <BigButton
-        title="Delete Item"
-        onClick={() => removeFromCart().catch(err => alert(err.message))}
-        disabled={loading}
-      >
-        &times;
-      </BigButton>
-    )}
-  </Mutation>
-);
+const RemoveFromCart = props => {
+  // This gets called as soon as we get a response back from the server after the update has been performed
+  // ...but since we're using Apollo's optimisticResponse, it gets called immediately too!
+  const update = (cache, payload) => {
+    // 1. Read the cache
+    const data = cache.readQuery({
+      query: CURRENT_USER_QUERY,
+    });
+
+    // 2. Remove that item from the cache
+    const cartItemId = payload.data.removeFromCart.id;
+    data.me.cart = data.me.cart.filter(cartItem => cartItem.id !== cartItemId);
+
+    // 3. Write it back to the cache
+    cache.writeQuery({
+      query: CURRENT_USER_QUERY,
+      data,
+    });
+  };
+
+  return (
+    <Mutation
+      mutation={REMOVE_FROM_CART_MUTATION}
+      variables={{ id: props.id }}
+      update={update}
+      optimisticResponse={{
+        __typename: 'Mutation',
+        removeFromCart: {
+          __typename: 'CartItem',
+          id: props.id,
+        },
+      }}
+    >
+      {(removeFromCart, { loading, error }) => (
+        <BigButton
+          title="Delete Item"
+          onClick={() => removeFromCart().catch(err => alert(err.message))}
+          disabled={loading}
+        >
+          &times;
+        </BigButton>
+      )}
+    </Mutation>
+  );
+};
 
 RemoveFromCart.propTypes = {
   id: PropTypes.string.isRequired,
