@@ -36,7 +36,7 @@ const Composed = adopt({
 const Cart = () => (
   <Composed>
     {({ user, toggleCart, localState }) => {
-      const { me } = user.data.me;
+      const { me } = user.data;
       if (!me) return null;
 
       return (
